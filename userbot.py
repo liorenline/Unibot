@@ -1,8 +1,8 @@
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = "8421493534:AAFZtFHyqCM1v-8yHhoIG2elAC1HQZgA44A"
-MOD_CHAT = -5031104641
+TOKEN = ""
+MOD_CHAT = 
 
 user_data = {}
 
