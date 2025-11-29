@@ -78,7 +78,6 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = msg.text
     status = user_data[user_id]["status"]
 
-    # Всі кнопкові стани
     buttons_only = {
         "menu": ["Повідомити знахідку", "Техпідтримка", "Наші соцмережі"],
         "ask_description": ["Так", "Ні", "Назад"],
@@ -87,7 +86,6 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "preview_menu": ["Відправити на модерацію", "Почати спочатку"],
     }
 
-    # Назад
     if text == "Назад":
         hist = user_data[user_id]["history"]
         if hist:
@@ -97,13 +95,11 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await msg.reply_text("Нікуди повертатись.")
         return
 
-    # Перевірка кнопкових станів
     if status in buttons_only and text not in buttons_only[status]:
         await msg.reply_text("Натисніть кнопку.")
         await send_question_for_status(update, user_id)
         return
 
-    # Меню
     if status == "menu":
         if text == "Повідомити знахідку":
             user_data[user_id]["history"].append("menu")
@@ -115,7 +111,6 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await msg.reply_text("Наші соцмережі: ...")
         return
 
-    # WHERE
     if status == "where":
         user_data[user_id]["history"].append("where")
         user_data[user_id]["where"] = text
@@ -123,7 +118,6 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.reply_text("Що було знайдено?", reply_markup=ReplyKeyboardRemove())
         return
 
-    # WHAT
     if status == "what":
         user_data[user_id]["history"].append("what")
         user_data[user_id]["what"] = text
@@ -131,7 +125,6 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.reply_text("Додати опис?", reply_markup=yes_no())
         return
 
-    # ASK DESCRIPTION
     if status == "ask_description":
         user_data[user_id]["history"].append("ask_description")
         if text == "Так":
@@ -143,7 +136,6 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await msg.reply_text("Додати фото?", reply_markup=yes_no())
         return
 
-    # DESCRIPTION
     if status == "description":
         user_data[user_id]["history"].append("description")
         user_data[user_id]["description"] = text
@@ -151,7 +143,6 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.reply_text("Додати фото?", reply_markup=yes_no())
         return
 
-    # ASK PHOTO
     if status == "ask_photo":
         user_data[user_id]["history"].append("ask_photo")
         if text == "Так":
@@ -163,7 +154,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await msg.reply_text("Додати контакт?", reply_markup=yes_no())
         return
 
-    # PHOTO
+
     if status == "photo":
         if msg.photo:
             user_data[user_id]["photo"] = msg.photo[-1].file_id
@@ -172,7 +163,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.reply_text("Додати контакт?", reply_markup=yes_no())
         return
 
-    # ASK CONTACT
+
     if status == "ask_contact":
         user_data[user_id]["history"].append("ask_contact")
         if text == "Так":
@@ -183,7 +174,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_data[user_id]["status"] = "preview"
         return
 
-    # CONTACT
+
     if status == "contact":
         user_data[user_id]["history"].append("contact")
         user_data[user_id]["contact"] = text
