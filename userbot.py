@@ -1,7 +1,7 @@
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = ""
+TOKEN = "
 MOD_CHAT = 
 
 user_data = {}
@@ -105,8 +105,16 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if status == "support":
         username = update.message.from_user.username
         uid = update.message.from_user.id
-        msg = f"Техпідтримка:\nВід @{username} "
+        user_text = update.message.text
+
+        msg = (
+            f"📩 Техпідтримка\n"
+            f"Від: @{username if username else uid}\n\n"
+            f"Повідомлення:\n{user_text}"
+        )
+
         await context.bot.send_message(chat_id=MOD_CHAT, text=msg)
+
         user_data[user_id]["status"] = "menu"
         await update.message.reply_text("Ваше звернення передано модераторам.", reply_markup=main_menu())
         return
@@ -171,7 +179,6 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Додати контакт?", reply_markup=yes_no())
         return
 
-    # 🔥 НОВИЙ БЛОК — ask_contact
     if status == "ask_contact":
         user_data[user_id]["history"].append("ask_contact")
 
