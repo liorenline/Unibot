@@ -1,10 +1,11 @@
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = "
+TOKEN = 
 MOD_CHAT = 
 
 user_data = {}
+MAX_LENGTH = 2000
 
 def main_menu():
     return ReplyKeyboardMarkup(
@@ -28,21 +29,21 @@ async def send_question_for_status(update, user_id):
     status = user_data[user_id]["status"]
 
     if status == "where":
-        await update.message.reply_text("Де була знайдена річ?", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text("Опишіть де була знайдена річ. Якщо знайдено в аудиторії, то перевірте і напишіть номер, або хоча б розташування.", reply_markup=ReplyKeyboardRemove())
     elif status == "what":
-        await update.message.reply_text("Що було знайдено?", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text("Назвіть що було знайдено. Зразок: гаманець, шапка, зошит.", reply_markup=ReplyKeyboardRemove())
     elif status == "ask_description":
-        await update.message.reply_text("Додати опис?", reply_markup=yes_no())
+        await update.message.reply_text("Ви хочете додати опис? \nОберіть кнопкою знизу", reply_markup=yes_no())
     elif status == "description":
-        await update.message.reply_text("Напишіть опис:", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text("Напишіть опис. \n Постарайтесь детально описати. \nЯкщо це цінна річ, прибережіть пару фактів для питань до власника щоб переконатись чи це справжній власник.", reply_markup=ReplyKeyboardRemove())
     elif status == "ask_photo":
-        await update.message.reply_text("Додати фото?", reply_markup=yes_no())
+        await update.message.reply_text("Ви хочете додати фото знахідки? \nОберіть кнопкою знизу.", reply_markup=yes_no())
     elif status == "photo":
-        await update.message.reply_text("Надішліть фото:", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text("Надішліть фото сюди.", reply_markup=ReplyKeyboardRemove())
     elif status == "ask_contact":
-        await update.message.reply_text("Додати контакт?", reply_markup=yes_no())
+        await update.message.reply_text("Чи додавати ваш контакт(telegram user) до оголошення про знахідку? \nОберіть кнопкою знизу", reply_markup=yes_no())
     elif status == "support":
-        await update.message.reply_text("Опишіть вашу проблему:", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text("Опишіть вашу проблему, це буде надіслано в техпідтримку:", reply_markup=ReplyKeyboardRemove())
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
@@ -57,7 +58,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "contact": None
     }
 
-    await update.message.reply_text("Оберіть дію:", reply_markup=main_menu())
+    await update.message.reply_text("Добрий день. Вітаю вас в телеграм-боті для розшуку речей. Велике дякую за допомогу колегам більш розсіяним за вас). Надалі можете обирати дії:", reply_markup=main_menu())
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
@@ -66,6 +67,19 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id not in user_data:
         await update.message.reply_text("Натисніть /start")
         return
+
+    if not update.message or not update.message.text:
+        if user_data[user_id]["status"] == "photo":
+            pass
+        else:
+            await update.message.reply_text("Будь ласка, надішліть текстове повідомлення.")
+            return
+    else:
+        if len(text) > MAX_LENGTH:
+            await update.message.reply_text(
+                f"Ваше повідомлення занадто велике ({len(text)} символів). Максимум {MAX_LENGTH}."
+            )
+            return
 
     if text == "Назад":
         hist = user_data[user_id]["history"]
@@ -94,12 +108,12 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if status == "menu" and text == "Повідомити знахідку":
         user_data[user_id]["history"].append("menu")
         user_data[user_id]["status"] = "where"
-        await update.message.reply_text("Де була знайдена річ?", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text("Опишіть де була знайдена річ. Якщо знайдено в аудиторії, то перевірте і напишіть номер, або хоча б розташування.", reply_markup=ReplyKeyboardRemove())
         return
 
     if status == "menu" and text == "Техпідтримка":
         user_data[user_id]["status"] = "support"
-        await update.message.reply_text("Опишіть вашу проблему:", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text("Опишіть вашу проблему, це буде надіслано в техпідтримку:", reply_markup=ReplyKeyboardRemove())
         return
 
     if status == "support":
@@ -116,67 +130,74 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(chat_id=MOD_CHAT, text=msg)
 
         user_data[user_id]["status"] = "menu"
-        await update.message.reply_text("Ваше звернення передано модераторам.", reply_markup=main_menu())
+        await update.message.reply_text("Ваше звернення передано модераторам. Дякуємо :) ", reply_markup=main_menu())
         return
 
     if status == "menu" and text == "Наші соцмережі":
-        await update.message.reply_text("Наші соцмережі: ...")
+        message = (
+            "Бота розроблено Профбюро студентів Факультету прикладної математики та інформатики\n\n"
+            "📌 <b>Канал втрачених речей:</b> <a href=\"https://t.me/+T7nmFgVuGn8wN2Yy\">перейти</a>\n"
+            "📌 <b>Телеграм профбюро:</b> <a href=\"https://t.me/ami_profburo\">AMI Profburo</a>\n"
+            "📌 <b>Instagram профбюро:</b> <a href=\"https://www.instagram.com/ami_profburo?igsh=MWdwaXg4dGdrNTQ1NA==\">@ami_profburo</a>\n"
+            "📌 <b>Linktree:</b> <a href=\"https://linktr.ee/ami.profburo.lnu\">AMI Profburo</a>\n\n"
+        )
+        await update.message.reply_text(message, parse_mode="HTML")
         return
 
     if status == "where":
         user_data[user_id]["history"].append("where")
         user_data[user_id]["where"] = text
         user_data[user_id]["status"] = "what"
-        await update.message.reply_text("Що було знайдено?", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text("Назвіть що було знайдено. Зразок: гаманець, шапка, зошит.", reply_markup=ReplyKeyboardRemove())
         return
 
     if status == "what":
         user_data[user_id]["history"].append("what")
         user_data[user_id]["what"] = text
         user_data[user_id]["status"] = "ask_description"
-        await update.message.reply_text("Додати опис?", reply_markup=yes_no())
+        await update.message.reply_text("Ви хочете додати опис? \nОберіть кнопкою знизу.", reply_markup=yes_no())
         return
 
     if status == "ask_description":
         user_data[user_id]["history"].append("ask_description")
         if text == "Так":
             user_data[user_id]["status"] = "description"
-            await update.message.reply_text("Напишіть опис:", reply_markup=ReplyKeyboardRemove())
+            await update.message.reply_text("Напишіть опис. \nПостарайтесь детально описати. \nЯкщо це цінна річ, прибережіть пару фактів для питань до власника щоб переконатись чи це справжній власник.", reply_markup=ReplyKeyboardRemove())
             return
         else:
             user_data[user_id]["description"] = None
             user_data[user_id]["status"] = "ask_photo"
-            await update.message.reply_text("Додати фото?", reply_markup=yes_no())
+            await update.message.reply_text("Ви хочете додати фото знахідки? \nОберіть кнопкою знизу.", reply_markup=yes_no())
             return
 
     if status == "description":
         user_data[user_id]["history"].append("description")
         user_data[user_id]["description"] = text
         user_data[user_id]["status"] = "ask_photo"
-        await update.message.reply_text("Додати фото?", reply_markup=yes_no())
+        await update.message.reply_text("Ви хочете додати фото знахідки? \nОберіть кнопкою знизу.", reply_markup=yes_no())
         return
 
     if status == "ask_photo":
         user_data[user_id]["history"].append("ask_photo")
         if text == "Так":
             user_data[user_id]["status"] = "photo"
-            await update.message.reply_text("Надішліть фото.", reply_markup=ReplyKeyboardRemove())
+            await update.message.reply_text("Надішліть фото сюди.", reply_markup=ReplyKeyboardRemove())
             return
         else:
             user_data[user_id]["photo"] = None
             user_data[user_id]["status"] = "ask_contact"
-            await update.message.reply_text("Додати контакт?", reply_markup=yes_no())
+            await update.message.reply_text("Чи додавати ваш контакт(telegram user) до оголошення про знахідку? \nОберіть кнопкою знизу.", reply_markup=yes_no())
             return
 
     if status == "photo":
         user_data[user_id]["history"].append("photo")
         if not update.message.photo:
-            await update.message.reply_text("Це не фото. Надішліть фото ще раз.")
+            await update.message.reply_text("На жаль, виникла якась помилка. \nЯ не зміг розпізнати фото. Вишліть, будь ласка, ще раз фото:)")
             return
 
         user_data[user_id]["photo"] = update.message.photo[-1].file_id
         user_data[user_id]["status"] = "ask_contact"
-        await update.message.reply_text("Додати контакт?", reply_markup=yes_no())
+        await update.message.reply_text("Чи додавати ваш контакт(telegram user) до оголошення про знахідку? \nОберіть кнопкою знизу", reply_markup=yes_no())
         return
 
     if status == "ask_contact":
@@ -203,7 +224,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(preview)
 
         user_data[user_id]["status"] = "preview_menu"
-        await update.message.reply_text("Готово. Чи бажаєте відправити на модерацію?", reply_markup=pr_button())
+        await update.message.reply_text("Готово. Бажаєте відправити на модерацію, чи ви помітили помилку і хочете почати спочатку? \nОберіть кнопкою знизу.", reply_markup=pr_button())
         return
 
     if user_data[user_id]["status"] == "preview_menu":
@@ -218,7 +239,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "photo": None,
                 "contact": None
             }
-            await update.message.reply_text("Оберіть дію:", reply_markup=main_menu())
+            await update.message.reply_text("Добрий день. Вітаю вас в телеграм-боті для розшуку речей. Велике дякую за допомогу колегам більш розсіяним за вас). Надалі можете обирати дії:", reply_markup=main_menu())
             return
 
         if text == "Почати спочатку":
@@ -254,7 +275,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_data[user_id]["photo"] = None
             user_data[user_id]["contact"] = None
 
-            await update.message.reply_text("Надіслано модератору.", reply_markup=main_menu())
+            await update.message.reply_text("Надіслано модератору. Через деякий час це повідомлення появиться в чаті знахідок. Надалі можете обирати дії:", reply_markup=main_menu())
             return
 
     await update.message.reply_text("Я не розумію цю дію.")
