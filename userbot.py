@@ -1,8 +1,10 @@
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = 
-MOD_CHAT = 
+import os
+TOKEN = os.getenv("TOKEN")
+
+MOD_CHAT = -1003418258542
 
 user_data = {}
 MAX_LENGTH = 2000
